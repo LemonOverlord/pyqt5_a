@@ -87,7 +87,7 @@ def mainloop():
         """
 
 
-def radioInput(port):
+"""def radioInput(port):
     data = ''
     while True:
         sym = port.read(1)
@@ -102,6 +102,8 @@ def radioInput(port):
             data = ''
         else:
             data += str(sym)[2:3]
+    data = port.readline()
+    return data
 
 
 def dataOrganize(input_data):
@@ -133,7 +135,7 @@ def widgetOutput(widgets, data):
                 plot_data = plot.getData()[1]
                 plot_data[:-1] = plot_data[1:]
                 plot_data[-1] = graph_value
-                print(graph_value / 25.6)
+                print(graph_value)
                 plot.setData(plot_data)
         else:
             widget.setValue(value[0])
@@ -147,10 +149,11 @@ def logsOutput(names, data, log, file, time):
         log.append(f"{name} : {dat}")
     file.write("----------------\n")
     log.append("----------------")
-
-
-async def mainLoop():
-    radio_port = serial.Serial("COM5", 115200)
+    
+    
+def mainLoop():
+    #radio_port = serial.Serial("COM5", 115200)
+    radio_port = open('file', 'r')
     #file = open('file', 'r')
     log_file = open('logs.txt', 'w')
     time_start = time.time()
@@ -167,25 +170,112 @@ async def mainLoop():
             textOutput(text_labels, data)
             widgetOutput(widgets, data)
             logsOutput(log_names, data, main.logs, log_file, time.time()-time_start)
+            QtWidgets.QApplication.processEvents()
         except:
-            pass
+            pass"""
 
-async def Qloop():
+
+class WidgetInfo:
+    def __init__(self, widget, text, name, proportion, datatype, type, value_range=[0, 100]):
+        self.widget = widget
+        self.text = text
+        self.name = name
+        self.proportion = proportion
+        self.datatype = datatype
+        self.type = type
+        self.value_range = value_range
+
+
+def radioInput(port):
+    """data = []
     while True:
+        sym = port.read(1)
+        if sym == b'\r':
+                print(data)
+                return data
+        if sym == b'\n':
+            data = ''
+        else:
+            data.append(int(str(sym)[2:3]))"""
+    # data = port.readline()
+    # return [int(i) for i in data.split()]
+    data = [6, 3, 3, 1, 1, 1, 1]
+    data += [random.randint(-5, 40) for _ in range(10)]
+    return data
+
+
+def dataOrganize(input_data):
+    n = input_data[0]
+    data = input_data[1:]
+    output_data = [[] for _ in range(n)]
+    indexes = []
+    for count, index in zip(data[:n], range(n)):
+        for _ in range(count):
+            indexes.append(index)
+    for dat, index in zip(data[n:], indexes):
+        output_data[index].append(dat)
+    return output_data
+
+
+def widgetOutput(widget, data):
+    if widget.type == 'graph':
+        for plot, graph_value in zip(widget.widget, data):
+            plot_data = plot.getData()[1]
+            plot_data[:-1] = plot_data[1:]
+            plot_data[-1] = graph_value * widget.proportion
+            plot.setData(plot_data)
+    if widget.type == 'bar':
+        percent = (data[0] - widget.value_range[0]) * 100 // (widget.value_range[1] - widget.value_range[0])
+        widget.widget.setValue(int(percent))
+
+
+def textOutput(widget, data, file):
+    output = [dat * widget.proportion for dat in data]
+    if widget.type == 'graph':
+        widget.text.setText("X:{0}\nY:{1}\nZ:{2}".format(*[str(i) + widget.datatype for i in output]))
+    if widget.type == 'bar':
+        widget.text.setText(str(*output) + ' ' + widget.datatype)
+    logsWrite(widget.name, data, output, main.logs, file)
+
+
+def logsWrite(name, input_data, output_data, log, file):
+    log.append(f'{name}: {input_data} ---> {output_data}')
+    file.write(f'{name}: {input_data} ---> {output_data}\n')
+
+
+def mainLoop():
+    #radio_port = serial.Serial("COM5", 115200)
+    radio_port = open('file', 'r')
+    log_file = open('logs.txt', 'w')
+    time_start = time.time()
+    widgets = [WidgetInfo([plot1_x, plot1_y, plot1_z], main.plot1_text, 'accel1', 0.390625, 'м/с', 'graph'),
+               WidgetInfo([plot2_x, plot2_y, plot2_z], main.plot2_text, 'accel2', 0.390625, 'м/с', 'graph'),
+               WidgetInfo(main.temp1, main.temp1_lbl_b, 'temp1', 1, '°C', 'bar', [-5, 40]),
+               WidgetInfo(main.temp2, main.temp2_lbl_b, 'temp2', 1, '°C', 'bar', [-5, 40]),
+               WidgetInfo(main.press, main.press_lbl_b, 'press', 101325, 'Па', 'bar', [0.8, 1.2]),
+               WidgetInfo(main.height, main.height_lbl_b, 'temp1', 1, 'м', 'bar', [0, 1500])]
+    iter = 1
+    for i in range(10000):
+        radio_data = radioInput(radio_port)
+        print(radio_data)
+        data = dataOrganize(radio_data)
+        input_time = time.time()-time_start
+        main.logs.append(f'iter: {iter}')
+        main.logs.append(f'input_time: {input_time}')
+        log_file.write(f'iter: {iter}\n')
+        log_file.write(f'input_time: {input_time}\n')
+        for widget, dat in zip(widgets, data):
+            widgetOutput(widget, dat)
+            textOutput(widget, dat, log_file)
+        main.logs.append('-------------------')
+        log_file.write('-------------------\n')
+        iter += 1
         QtWidgets.QApplication.processEvents()
-
-async def start2():
-    task1 = asyncio.create_task(mainLoop())
-    task2 = asyncio.create_task(Qloop())
-    await task1
-    await task2
-
-def start():
-    asyncio.run(start2())
+        time.sleep(0.1)
 
 
-"""pg.setConfigOption('background', 'w')
-pg.setConfigOption('foreground', 'k')"""
+# pg.setConfigOption('background', 'w')
+# pg.setConfigOption('foreground', 'k')
 app = QtWidgets.QApplication(sys.argv)
 main = MainWindow()
 plot1_x = main.plot1.plot(pen='r')
@@ -200,6 +290,6 @@ plot1_z.setData([0 for _ in range(25)])
 plot2_x.setData([0 for _ in range(25)])
 plot2_y.setData([0 for _ in range(25)])
 plot2_z.setData([0 for _ in range(25)])
-main.LargeButton.clicked.connect(start)
+main.LargeButton.clicked.connect(mainLoop)
 main.show()
 sys.exit(app.exec_())
