@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>inputWindow</class>
+ <widget class="QWidget" name="inputWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>361</width>
+    <height>126</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>InputWindow</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0" colspan="2">
+    <widget class="QLineEdit" name="resourceName">
+     <property name="minimumSize">
+      <size>
+       <width>256</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="placeholderText">
+      <string>Filename or Portname</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QLineEdit" name="portSpeed">
+     <property name="minimumSize">
+      <size>
+       <width>256</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="placeholderText">
+      <string>Portspeed</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QPushButton" name="portConnectButton">
+     <property name="minimumSize">
+      <size>
+       <width>128</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Connect Port</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QPushButton" name="fileReadButton">
+     <property name="minimumSize">
+      <size>
+       <width>128</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Read File</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
